@@ -1,0 +1,191 @@
+pre, tt, code, kbd, samp {
+	font-family: Bookerly-Regular;
+	font-size: 18px;
+	font-style: normal;
+	font-variant: normal;
+	line-height: 22px;
+}
+dt {
+	margin: 0;
+}
+
+body {
+	font-family: Bookerly-Regular;
+    margin: 10%;
+    font-size: 12pt;
+}
+p, dl, multicol {
+    margin: 1em 0;
+}
+dd {
+    margin-left: 40px;
+    margin-bottom: 0;
+    margin-right: 0;
+    margin-top: 0;
+}
+blockquote, figure {
+    margin: 1em 40px;
+}
+center {
+    display: block;
+    text-align: center;
+}
+blockquote[type="cite"] {
+	font-family: Bookerly-Italic;
+    border: 3px solid;
+    padding-left: 1em;
+    border-color: blue;
+    border-width: thin;
+    margin: 1em 0;
+}
+h1 {
+	font-family: Bookerly-Regular;
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0.67em 0;
+}
+h2 {
+	font-family: Bookerly-Regular;	
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0.83em 0;
+}
+h3 {
+	font-family: Bookerly-Regular;
+    font-size: 26px;
+    font-weight: bold;
+    margin: 1em 0;
+}
+h4 {
+	font-family: Bookerly-Regular;	
+    font-size: 1em;
+    font-weight: bold;
+    margin: 1.33em 0;
+}
+h5 {
+	font-family: Bookerly-Regular;	
+    font-size: 0.83em;
+    font-weight: bold;
+    margin: 1.67em 0;
+}
+h6 {
+    font-size: 0.67em;
+    font-weight: bold;
+    margin: 2.33em 0;
+}
+listing {
+    font-size: medium;
+    margin: 1em 0;
+    white-space: pre;
+}
+xmp, pre, plaintext {
+    margin: 1em 0;
+    white-space: pre;
+}
+/* table { */
+/*     margin-bottom: 0; */
+/*     margin-top: 0; */
+/*     margin-left: 0; */
+/*     margin-right: 0; */
+/*     text-indent: 0; */
+/* } */
+caption {
+    text-align: center;
+}
+tr {
+    vertical-align: inherit;
+}
+tbody {
+    vertical-align: middle;
+}
+thead {
+    vertical-align: middle;
+}
+tfoot {
+    vertical-align: middle;
+}
+table > tr {
+    vertical-align: middle;
+}
+td {
+    padding: 1px;
+    text-align: inherit;
+    vertical-align: inherit;
+}
+th {
+    display: table-cell;
+    font-weight: bold;
+    padding: 1px;
+    vertical-align: inherit;
+}
+sub {
+    font-size: smaller;
+    vertical-align: sub;
+}
+sup {
+    font-size: smaller;
+    vertical-align: super;
+}
+
+nobr {
+    white-space: nowrap;
+}
+mark {
+    background: none repeat scroll 0 0 yellow;
+    color: black;
+}
+abbr[title], acronym[title] {
+    border-bottom: 1px dotted;
+}
+ul, menu, dir {
+    list-style-type: disc;
+}
+
+ul li ul {
+    list-style-type: circle;
+	margin: 0 0 3px 0;
+}
+
+ol {
+    list-style-type: decimal;
+    margin:10px;
+}
+hr {
+    color: gray;
+    height: 2px;
+}
+
+table, th, td {
+	font-family: Bookerly-Italic;
+	font-size: 16px;
+	font-style: normal;
+	font-variant: normal;
+	line-height: 22px;
+	
+   	margin-left:auto; 
+  	margin-right:auto;
+  	text-align:center;
+}
+
+img {
+	border: 1px solid black;
+    top: 0; bottom:0; left: 0; right:0;
+}
+
+div, cite, p {
+	font-family: Bookerly-Regular;
+	font-size: 16px;
+	font-style: normal;
+	font-variant: normal;
+	line-height: 24px;
+}
+
+i {
+	font-family: Bookerly-Regular;
+	font-size: 16px;
+	font-style: italic;
+	font-variant: normal;
+	font-weight: lighter;
+	line-height: 22px;
+}
+
