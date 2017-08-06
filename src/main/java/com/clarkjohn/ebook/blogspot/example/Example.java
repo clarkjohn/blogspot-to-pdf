@@ -10,8 +10,10 @@ import com.clarkjohn.ebook.blogspot.BlogspotProperties;
 import com.clarkjohn.ebook.blogspot.BlogspotToPdf;
 
 /**
+ * Example program to scrape a Blogger urls and convert to a PDF
+ * Real links removed
  * 
- * @author jc
+ * @author john@clarkjohn.com
  *
  */
 public class Example {

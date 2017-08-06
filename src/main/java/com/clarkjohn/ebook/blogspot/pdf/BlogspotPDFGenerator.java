@@ -10,14 +10,9 @@ import java.util.Map;
 
 import com.clarkjohn.ebook.blogspot.BlogspotUrlProperties;
 import com.clarkjohn.ebook.blogspot.BlogspotProperties;
-import com.itextpdf.text.Anchor;
-import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.itextpdf.tool.xml.XMLWorker;
 import com.itextpdf.tool.xml.XMLWorkerFontProvider;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
@@ -41,34 +36,28 @@ import com.itextpdf.tool.xml.pipeline.html.HtmlPipelineContext;
  */
 public class BlogspotPDFGenerator {
 
-	private Font mainFont;
-	private XMLWorkerFontProvider fontProvider;
-	private BlogspotProperties blogspotProperties;
-	
-	public BlogspotPDFGenerator(BlogspotProperties blogspotProperties) {
-		
-		this.blogspotProperties = blogspotProperties;
-		
-		fontProvider = new XMLWorkerFontProvider(XMLWorkerFontProvider.DONTLOOKFORFONTS);
+	private BlogspotPDFGenerator() {
+	}
+
+	public static void createPdf(Map<String, List<BlogspotUrlProperties>> sectionTitleToBlogPages, BlogspotProperties blogspotProperties)
+			throws DocumentException, IOException {
+
+		// fonts
+		XMLWorkerFontProvider fontProvider = new XMLWorkerFontProvider(XMLWorkerFontProvider.DONTLOOKFORFONTS);
 		fontProvider.register("Bookerly-Regular.ttf", "Bookerly-Regular");
 		fontProvider.register("Bookerly-Italic.ttf", "Bookerly-Italic");
 
-		mainFont = fontProvider.getFont("Bookerly-Regular");
-	}
-
-
-	public void createPdf(Map<String, List<BlogspotUrlProperties>> sectionTitleToBlogPages) throws DocumentException, IOException {
-		
+		// init document
 		Document document = new Document();
-		PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(initOutputFile(), false));
+		PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(initOutputFile(blogspotProperties), false));
 		document.open();
 
+		// html
 		CssAppliers cssAppliers = new CssAppliersImpl(fontProvider);
 
-		// HTML
 		HtmlPipelineContext htmlContext = new HtmlPipelineContext(cssAppliers);
+		htmlContext.autoBookmark(false);
 		htmlContext.setTagFactory(Tags.getHtmlTagProcessorFactory());
-		htmlContext.setImageProvider(new Base64ImageProvider());
 
 		InputStream csspathtest = Thread.currentThread().getContextClassLoader().getResourceAsStream("blogspot-pdf.css");
 		CssFile cssfiletest = XMLWorkerHelper.getCSS(csspathtest);
@@ -81,114 +70,25 @@ public class BlogspotPDFGenerator {
 
 		CssResolverPipeline css = new CssResolverPipeline(cssResolver, html);
 
+		// xmlworker
 		XMLWorker worker = new XMLWorker(css, true);
 		XMLParser xmlParser = new XMLParser(worker);
 
+		// start writing pdf document
 		xmlParser.parse(new ByteArrayInputStream(new String("<body>").getBytes()));
-		createBlogSection(sectionTitleToBlogPages, xmlParser, document);
-		createCommentsSection(sectionTitleToBlogPages, xmlParser, document);
-				
+		BlogSectionPdfWriter.createBlogSection(sectionTitleToBlogPages, xmlParser, document, writer, fontProvider.getFont("Bookerly-Regular"));
+		CommentsSectionPdfWriter.createCommentsSection(sectionTitleToBlogPages, xmlParser, document, writer);
+
 		document.close();
 	}
 
+	private static File initOutputFile(BlogspotProperties blogspotProperties) {
 
-	private File initOutputFile() {
-		
 		File outputFolder = new File("output");
 		outputFolder.mkdir();
 		System.out.println("Creating output file at=" + outputFolder.getAbsolutePath() + File.separator + blogspotProperties.getOutputPdfFileName());
-		
+
 		return new File(outputFolder, blogspotProperties.getOutputPdfFileName());
-	
-	}
-
-	
-	private void createCommentsSection(Map<String, List<BlogspotUrlProperties>> sectionTitleToBlogPages, XMLParser xmlParser,
-			com.itextpdf.text.Document document) throws IOException {
-
-		int count = 0;
-		for (Map.Entry<String, List<BlogspotUrlProperties>> entry : sectionTitleToBlogPages.entrySet()) {
-
-			document.newPage();
-			xmlParser.parse(new ByteArrayInputStream(new String("<h3>" + entry.getKey() + "</h3>").getBytes()));
-
-			for (BlogspotUrlProperties blogPage : entry.getValue()) {
-
-				try {
-					System.out.println("Creating comment section " + count++ +"=" + blogPage.getBlogTitle());
-
-					document.add(new Chunk(new LineSeparator()));
-					xmlParser.parse(new ByteArrayInputStream(new String("<br /><h4>" + blogPage.getBlogTitle() + "</h4>").getBytes()));
-					xmlParser.parse(new ByteArrayInputStream(blogPage.getCommentsSection().toString().getBytes()));
-					document.add(getCommentsAnchorTargetingBlogPage(blogPage));
-
-				} catch (Exception e) {					
-					e.printStackTrace();
-					//keep creating comments
-				}
-			}
-		}
-	}
-
-	private Paragraph getCommentsAnchorTargetingBlogPage(BlogspotUrlProperties blogPage) {
-		
-		Anchor anchor = new Anchor("[Back to " + blogPage.getBlogTitle() + "]");
-		anchor.setName(blogPage.getPdfCommentsAnchor());
-		anchor.setReference("#" + blogPage.getPdfBlogAnchor());
-		
-		Paragraph paragraph = new Paragraph();
-		paragraph.add(anchor);
-		
-		return paragraph;
-	}
-
-	private void createBlogSection(Map<String, List<BlogspotUrlProperties>> sectionTitleToBlogPages, XMLParser xmlParser,
-			com.itextpdf.text.Document document) throws IOException {
-
-		int count = 0;
-		for (Map.Entry<String, List<BlogspotUrlProperties>> entry : sectionTitleToBlogPages.entrySet()) {
-
-			document.newPage();
-			xmlParser.parse(new ByteArrayInputStream(new String("<h3>" + entry.getKey() + "</h3>").getBytes()));
-
-			for (BlogspotUrlProperties blogPage : entry.getValue()) {
-				try {
-					System.out.println("Creating blog section " + count++ + "=" + blogPage.getBlogTitle());
-
-					//headers
-					document.add(new Chunk(new LineSeparator()));
-					xmlParser.parse(new ByteArrayInputStream(new String("<h3>" + blogPage.getBlogTitle() + "</h3>").getBytes()));
-					xmlParser.parse(new ByteArrayInputStream(new String("<b>" + blogPage.getBlogTextDate() + "</b><br />").getBytes()));
-					
-					//back to blog
-					document.add(getAnchorTargetingCommentsPage(blogPage));
-					xmlParser.parse(new ByteArrayInputStream(new String("<br />").getBytes()));
-					
-					//body
-					xmlParser.parse(new ByteArrayInputStream(blogPage.getBlogSection().toString().getBytes()));
-					
-					//back to blog
-					document.add(getAnchorTargetingCommentsPage(blogPage));
-
-				} catch (Exception e) {
-					e.printStackTrace();
-					//keep creating blog pages
-				}
-			}
-		}
-	}
-
-	private Paragraph getAnchorTargetingCommentsPage(BlogspotUrlProperties blogPage) {
-		
-		Anchor anchor = new Anchor("[comments]");
-		anchor.setName(blogPage.getPdfBlogAnchor());
-		anchor.setReference("#" + blogPage.getPdfCommentsAnchor());
-
-		Paragraph paragraph = new Paragraph();
-		paragraph.setFont(mainFont);
-		paragraph.add(anchor);
-		
-		return paragraph;
 	}
 
 }

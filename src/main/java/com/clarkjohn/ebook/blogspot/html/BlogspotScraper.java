@@ -18,12 +18,12 @@ import com.clarkjohn.ebook.blogspot.BlogspotProperties;
 import com.clarkjohn.ebook.blogspot.BlogspotUrlProperties;
 
 /**
- * HTML Parser for blogs on Blogspot.com
+ * HTML Scraper for blogs on Blogspot.com
  * 
  * @author john@clarkjohn.com
  *
  */
-public class BlogspotHtmlParser {
+public class BlogspotScraper {
 
 	private static final OutputSettings OUTPUT_SETTINGS = new OutputSettings().syntax(OutputSettings.Syntax.xml).charset(StandardCharsets.UTF_8)
 			.prettyPrint(true);
@@ -31,13 +31,7 @@ public class BlogspotHtmlParser {
 	private static final String COLOR_DARK_GREY_HTML = "313237";
 	private static final String COLOR_DARK_RED_HTML = "7f0000";
 	
-	private BlogspotProperties blogspotProperties;
-
-	public BlogspotHtmlParser(BlogspotProperties blogspotProperties) {
-		this.blogspotProperties = blogspotProperties;
-	}
-
-	public Map<String, List<BlogspotUrlProperties>> getSectionTitleToBlogPages() throws IOException {
+	public static Map<String, List<BlogspotUrlProperties>> getSectionTitleToBlogPages(BlogspotProperties blogspotProperties) throws IOException {
 
 		int count = 0;
 		Map<String, List<BlogspotUrlProperties>> sectionTitleToBlogPages = new LinkedHashMap<>();
@@ -46,14 +40,15 @@ public class BlogspotHtmlParser {
 			List<BlogspotUrlProperties> blogPages = new LinkedList<>();
 			for (String url : entry.getValue()) {
 
+				System.out.println("Scraping url " + count++ + "=" + url);
 				Document document = Jsoup.connect(url).get();
 
 				BlogspotUrlProperties blogspotPage = new BlogspotUrlProperties();
 				blogspotPage.setUrl(url);
 				blogspotPage.setBlogTitle(document.getElementsByClass("post-title entry-title").text());
 				blogspotPage.setBlogTextDate(document.getElementsByClass("date-header").text());
-				blogspotPage.setBlogSection(parseBlogSection(url));
-				blogspotPage.setCommentsSection(parseComments(url));
+				blogspotPage.setBlogSection(scrapeBlog(url));
+				blogspotPage.setCommentsSection(scrapComments(url, blogspotProperties));
 				blogspotPage.setPdfBlogAnchor("blog" + count);
 				blogspotPage.setPdfCommentsAnchor("comments" + count);
 
@@ -66,7 +61,7 @@ public class BlogspotHtmlParser {
 		return sectionTitleToBlogPages;
 	}
 
-	public String parseBlogSection(String blogUrl) throws IOException {
+	private static String scrapeBlog(String blogUrl) throws IOException {
 
 		Document blogDocument = Jsoup.connect(blogUrl).get();
 
@@ -85,43 +80,43 @@ public class BlogspotHtmlParser {
 
 		cleanInvalidITextHtml(blogElements);
 
-		String parsedHtml = Jsoup.clean(blogElements.html(), "", Whitelist.relaxed(), OUTPUT_SETTINGS)
+		String scrapedHtml = Jsoup.clean(blogElements.html(), "", Whitelist.relaxed(), OUTPUT_SETTINGS)
 				// fix breaks
 				.replace("<br>", "<br />")
 				// remove spans
 				.replace("<span>", "").replace("</span>", "");
 
-		parsedHtml = "<p>" + parsedHtml + "</p>";
+		scrapedHtml = "<p>" + scrapedHtml + "</p>";
 
-		return parsedHtml;
+		return scrapedHtml;
 	}
 
-	public String parseComments(String blogUrl) throws IOException {
+	private static String scrapComments(String blogUrl, BlogspotProperties blogspotProperties) throws IOException {
 
-		Elements commentsElements = Jsoup.connect(blogUrl).get().getElementsByClass("comments");
+		Elements commentElements = Jsoup.connect(blogUrl).get().getElementsByClass("comments");
 
-		commentsElements.select(":containsOwn(Delete)").remove();
-		commentsElements.select(":containsOwn(Reply)").remove();
-		commentsElements.select(":containsOwn(Replies)").remove();
-		commentsElements.select(":containsOwn(Add comment)").remove();
-		commentsElements.select(":containsOwn(Load more...)").remove();
+		commentElements.select(":containsOwn(Delete)").remove();
+		commentElements.select(":containsOwn(Reply)").remove();
+		commentElements.select(":containsOwn(Replies)").remove();
+		commentElements.select(":containsOwn(Add comment)").remove();
+		commentElements.select(":containsOwn(Load more...)").remove();
 
-		removeLinksFromBlogDate(commentsElements);
-		highlistAuthorComments(commentsElements);
-		removeInvalidItextTags(commentsElements);
-		cleanInvalidITextHtml(commentsElements);
+		removeLinksFromBlogDate(commentElements);
+		highlistAuthorComments(commentElements, blogspotProperties);
+		removeInvalidItextTags(commentElements);
+		cleanInvalidITextHtml(commentElements);
 
 		Whitelist whitelist = Whitelist.basic().addAttributes("p", "style");
-		String comments = Jsoup.clean(commentsElements.html(), "", whitelist, OUTPUT_SETTINGS)
+		String scrappedComments = Jsoup.clean(commentElements.html(), "", whitelist, OUTPUT_SETTINGS)
 				// fix breaks
 				.replace("<br>", "<br />")
 				// add more spacing between messages
 				.replaceAll("</li>", "<br /></li>");
 
-		return comments;
+		return scrappedComments;
 	}
 
-	private void removeInvalidItextTags(Elements elements) {
+	private static void removeInvalidItextTags(Elements elements) {
 
 		for (Element element : elements.select("p")) {
 			if (element.text().contains("/")) {
@@ -130,7 +125,7 @@ public class BlogspotHtmlParser {
 		}
 	}
 
-	private void highlistAuthorComments(Elements elements) {
+	private static void highlistAuthorComments(Elements elements, BlogspotProperties blogspotProperties) {
 		
 		for (Element element : elements.select("cite")) {
 			if (containsIgnoreCase(element.text(), blogspotProperties.getCommentatorsToHighlight())) {
@@ -142,7 +137,7 @@ public class BlogspotHtmlParser {
 	}
 	
 	//TODO remove this
-	private boolean containsIgnoreCase(String str, List<String> list) {
+	private static boolean containsIgnoreCase(String str, List<String> list) {
 	    
 		for (String i : list){
 	        if(i.equalsIgnoreCase(str))
